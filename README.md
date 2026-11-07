@@ -4,7 +4,7 @@
 
 ## 试玩与操作
 
-- 0.2.0 本地试玩包：`dist/Breachline-0.2.0-android.apk`。这是本机成品，**尚未作为公开 Release 发布**。原来的 0.1.0 仍可在 [Releases](https://github.com/junnhwan/ironhold-android/releases) 找到。
+- 0.2.0 试玩包：[GitHub 下载](https://github.com/junnhwan/ironhold-android/releases/download/v0.2.0/Breachline-0.2.0-android.apk)，本机成品位于 `dist/Breachline-0.2.0-android.apk`。原来的 0.1.0 仍可在 [Releases](https://github.com/junnhwan/ironhold-android/releases) 找到。
 - 左手摇杆移动，向前推满冲刺；右侧空白区域滑动转向。按住开火键射击时，也可以直接拖动开火键转向。
 - 开始界面或暂停界面的“操作与画质设置”可调整普通/开镜灵敏度、动作键与摇杆大小、按键底色，以及流畅、均衡、清晰三档画质。
 - 在设置中选择“拖动调整按键位置”，拖动摇杆、单个动作键、武器栏或暂停键，点“完成”保存；编辑时可恢复默认位置。设置保存在本机。
