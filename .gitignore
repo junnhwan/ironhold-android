@@ -6,3 +6,5 @@ signing/
 signing.properties
 *.apk
 *.jks
+dist/
+node_modules/

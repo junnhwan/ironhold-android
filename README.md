@@ -1,25 +1,22 @@
-# Ironhold 安卓试玩
+# 重围突袭 · 安卓试玩
 
-Operation Ironhold 的离线安卓试玩。原作是 StarKnightt 的浏览器 FPS，MIT 许可，见仓库根目录 `LICENSE`。这一版保留原来的集装箱场地、四把枪、十个敌人和三分钟限时，补了横屏触屏，并把 Three.js 放进安装包。
+基于 [Operation Ironhold](https://github.com/StarKnightt/operation-ironhold) 的离线安卓 FPS。保留原作的集装箱场地、四把枪、十个敌人和三分钟清场，并针对横屏触控调整。原作 Copyright (c) 2026 StarKnightt，MIT 许可，见 `LICENSE`。
 
-以后加玩法就加在这个目录里。游戏逻辑在 `game/index.html`，触屏在 `game/touch.js`。
+## 试玩与操作
 
-## 操作
+- 0.2.0 本地试玩包：`dist/Breachline-0.2.0-android.apk`。这是本机成品，**尚未作为公开 Release 发布**。原来的 0.1.0 仍可在 [Releases](https://github.com/junnhwan/ironhold-android/releases) 找到。
+- 左手摇杆移动，向前推满冲刺；右侧空白区域滑动转向。按住开火键射击时，也可以直接拖动开火键转向。
+- 开始界面或暂停界面的“操作与画质设置”可调整普通/开镜灵敏度、动作键与摇杆大小、按键底色，以及流畅、均衡、清晰三档画质。
+- 在设置中选择“拖动调整按键位置”，拖动摇杆、单个动作键、武器栏或暂停键，点“完成”保存；编辑时可恢复默认位置。设置保存在本机。
+- “清晰”固定较高的场景渲染分辨率，设备卡顿或发热时可以切换“均衡”或“流畅”。实际画质和帧率依设备而定。
+- 暂停键或安卓返回键暂停；暂停时再按返回离开游戏。
 
-左手摇杆移动，推满向前冲刺。右侧空白处滑动转向。开火按住连射，瞄准点一下开关，跳按住可以翻上箱子。装弹、下蹲、屏息和单发/连发都在右下角。上方四个键切换步枪、霰弹、手枪和狙击。暂停键或安卓返回键暂停；再按返回离开游戏。
+应用包名仍为 `com.junnhwan.ironhold`，使用原签名，可覆盖安装 0.1.0。最低 Android 8.0（API 26），游戏不需要联网。
 
-## 浏览器里先看
+## 开发和验证
 
-在 `game` 目录起一个本地页面服务，打开 `http://127.0.0.1:8137/index.html?touch=1`。不带 `?touch=1` 时仍是原来的鼠标键盘。
+游戏主体为 `game/index.html`，移动端界面为 `game/mobile.css`，触控与设置为 `game/mobile-controls.js`。在 `game` 目录运行本地页面服务，打开 `http://127.0.0.1:8137/index.html?touch=1` 可查看触屏布局；不带 `?touch=1` 时保留鼠标键盘操作。
 
-## 安装
+在本目录配置好 SDK 的 `local.properties` 和不入库的 `signing.properties` 后，运行 `gradlew.bat assembleRelease`；签名成品位于 `app/build/outputs/apk/release/app-release.apk`。
 
-公开版本在 [Releases](https://github.com/junnhwan/ironhold-android/releases)。0.1.0 的安装包是 `Ironhold-0.1.0-android.apk`，包名 `com.junnhwan.ironhold`，横屏，不联网。
-
-本机重新打包时，SDK 路径写在 `local.properties`，正式签名写在不入库的 `signing.properties`。在本目录执行：
-
-```bat
-gradlew.bat assembleRelease
-```
-
-签名安装包在 `app/build/outputs/apk/release/app-release.apk`。
+`tests/mobile-controls.test.cjs` 使用 Node.js、可解析的 Playwright 和本机 Chromium/Edge，验证多指移动与开火拖动、暂停释放、设置及布局持久化、不同横屏尺寸。运行 `node tests/mobile-controls.test.cjs`；可通过环境变量 `BREACHLINE_BROWSER` 指定浏览器程序。浏览器测试和模拟器测试不能替代真机手感、发热和性能验收。

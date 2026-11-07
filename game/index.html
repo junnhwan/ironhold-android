@@ -338,6 +338,7 @@
   #err{position:absolute;left:0;right:0;bottom:0;max-height:42%;overflow:auto;z-index:99;
     background:rgba(70,0,0,.94);color:#ffd9d5;font:11px/1.55 ui-monospace,Consolas,monospace;padding:10px 14px;display:none;white-space:pre-wrap;}
 </style>
+<link rel="stylesheet" href="mobile.css">
 </head>
 <body>
 
@@ -400,7 +401,7 @@
   </div>
 </div>
 
-<div id="pause"><div class="t">PAUSED</div><div class="s">CLICK TO RESUME</div></div>
+<div id="pause"><div class="t">PAUSED</div><div class="s">CLICK TO RESUME</div><button class="mobile-settings-entry" type="button" data-open-settings>操作与画质设置</button></div>
 
 <div class="screen" id="startScreen">
   <div class="slug tl">IRONHOLD // SECTOR 7</div>
@@ -425,6 +426,7 @@
     </div>
     <div class="cta">PRESS TO START</div>
     <div class="hint">ELIMINATE ALL 10 HOSTILES BEFORE THE CLOCK RUNS OUT</div>
+    <button class="mobile-settings-entry" type="button" data-open-settings>操作与画质设置</button>
   </div>
 </div>
 
@@ -444,22 +446,50 @@
 
 <div id="touch" hidden>
   <div id="look"></div>
-  <div id="stick"><div id="stickKnob"></div></div>
-  <button id="btnPause" type="button">暂停</button>
-  <div id="cluster">
+  <div id="stick" data-layout="stick"><div id="stickKnob"></div></div>
+  <button id="btnPause" data-layout="pause" type="button">暂停</button>
+  <div id="weaponBar" data-layout="weapons" aria-label="切换武器">
     <button type="button" data-weapon="0">步枪</button>
     <button type="button" data-weapon="1">霰弹</button>
     <button type="button" data-weapon="2">手枪</button>
     <button type="button" data-weapon="3">狙击</button>
-    <button id="btnBreath" type="button">屏息</button>
-    <button id="btnAim" type="button">瞄准</button>
-    <button id="btnJump" type="button">跳</button>
-    <button id="btnFire" class="fire" type="button">开火</button>
-    <button id="btnCrouch" type="button">蹲</button>
-    <button id="btnReload" type="button">装弹</button>
-    <button id="btnMode" type="button">单发</button>
+  </div>
+  <div id="cluster">
+    <button id="btnBreath" data-layout="breath" type="button">屏息</button>
+    <button id="btnAim" data-layout="aim" type="button">瞄准</button>
+    <button id="btnJump" data-layout="jump" type="button">跳</button>
+    <button id="btnFire" data-layout="fire" class="fire" type="button">开火</button>
+    <button id="btnCrouch" data-layout="crouch" type="button">蹲</button>
+    <button id="btnReload" data-layout="reload" type="button">装弹</button>
+    <button id="btnMode" data-layout="mode" type="button">单发</button>
   </div>
 </div>
+
+<section id="mobileSettings" hidden aria-label="操作与画质设置">
+  <div class="settings-panel">
+    <header class="settings-header"><div><span class="settings-kicker">BREACHLINE / OPTIONS</span><h2>操作与画质</h2></div><button id="settingsClose" type="button" aria-label="关闭设置">完成</button></header>
+    <div class="settings-grid">
+      <div class="settings-group"><h3>视角灵敏度</h3>
+        <label>普通视角 <output id="lookValue"></output><input id="lookSensitivity" type="range" min="40" max="220" step="5"></label>
+        <label>开镜视角 <output id="aimValue"></output><input id="aimSensitivity" type="range" min="40" max="220" step="5"></label>
+        <p>右侧滑动或按住开火键拖动，均可转动视角。</p>
+      </div>
+      <div class="settings-group"><h3>触屏按键</h3>
+        <label>动作键与摇杆 <output id="sizeValue"></output><input id="buttonSize" type="range" min="80" max="125" step="5"></label>
+        <label>按键底色 <output id="opacityValue"></output><input id="buttonOpacity" type="range" min="25" max="85" step="5"></label>
+        <button id="editLayout" class="settings-secondary" type="button">拖动调整按键位置</button>
+      </div>
+      <div class="settings-group settings-graphics"><h3>画质</h3>
+        <div id="qualityChoices" class="quality-choices" role="group" aria-label="画质档位">
+          <button type="button" data-quality="smooth">流畅</button><button type="button" data-quality="balanced">均衡</button><button type="button" data-quality="clear">清晰</button>
+        </div>
+        <p id="qualityHint"></p>
+      </div>
+    </div>
+    <footer class="settings-footer"><span>设置保存在本机</span><button id="resetSettings" type="button">恢复默认设置</button></footer>
+  </div>
+</section>
+<div id="layoutToolbar" hidden><span>拖动按键到习惯的位置</span><button id="resetLayout" type="button">恢复位置</button><button id="finishLayout" type="button">完成</button></div>
 
 <div id="boot">LOADING ORDNANCE…</div>
 <div id="err"></div>
@@ -806,7 +836,7 @@ const SFX = (function(){
    ========================================================================= */
 const canvas   = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, powerPreference:'high-performance', stencil:false });
-const DPR = Math.min(window.devicePixelRatio||1, MOBILE ? 1 : 1.5);
+const DPR = Math.min(window.devicePixelRatio||1, MOBILE ? 1.25 : 1.5);
 renderer.setPixelRatio(DPR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.autoClear = false;
@@ -876,9 +906,16 @@ function makeRT(w,h,depth){
 let sceneRT, bloomA, bloomB, RTW, RTH;
 /* The whole frame lands in an offscreen target that the composite pass
    upscales, so render resolution can float independently of the canvas. */
-let renderScale = MOBILE ? 0.76 : 1.0;
+let renderScale = MOBILE ? 0.88 : 1.0;
 const SCALE_STEPS = [1.0, 0.88, 0.76, 0.64, 0.55];
-let scaleIdx = MOBILE ? 2 : 0;
+let scaleIdx = MOBILE ? 1 : 0;
+const MOBILE_QUALITY = {
+  smooth:   {start:2, best:1, worst:3},
+  balanced: {start:1, best:0, worst:2},
+  clear:    {start:0, best:0, worst:0}
+};
+let qualityBounds = MOBILE ? MOBILE_QUALITY.balanced : {start:0, best:0, worst:4};
+let qualityGeneration = 0;
 function allocTargets(){
   RTW = Math.max(2, Math.floor(innerWidth*DPR*renderScale));
   RTH = Math.max(2, Math.floor(innerHeight*DPR*renderScale));
@@ -893,6 +930,15 @@ function allocTargets(){
 }
 allocTargets();
 
+function setMobileQuality(name){
+  if (!MOBILE) return;
+  qualityBounds = MOBILE_QUALITY[name] || MOBILE_QUALITY.balanced;
+  scaleIdx = qualityBounds.start;
+  renderScale = SCALE_STEPS[scaleIdx];
+  qualityGeneration++;
+  allocTargets();
+}
+
 /* Dynamic resolution. Judged on a median of recent frame times so one hitch
    (shader compile, GC) can't drop the whole session a step.
 
@@ -903,8 +949,12 @@ allocTargets();
 const adaptive = (()=>{
   const N = 48, ring = new Float32Array(N).fill(16), sorted = new Float32Array(N);
   let head = 0, filled = 0, hold = 1.5;
-  let pending = 0, floorIdx = SCALE_STEPS.length-1;
+  let pending = 0, floorIdx = qualityBounds.worst, generation = qualityGeneration;
   return function(dt){
+    if (generation !== qualityGeneration){
+      generation = qualityGeneration; floorIdx = qualityBounds.worst;
+      head = 0; filled = 0; hold = 1.5; pending = 0;
+    }
     ring[head] = dt*1000; head = (head+1)%N;
     if (filled < N){ filled++; return; }
     hold -= dt;
@@ -915,15 +965,15 @@ const adaptive = (()=>{
       /* a downscale should buy back at least 6% of the frame; if it didn't,
          this machine is CPU-bound and blurring it further is pure loss */
       if (med > pending*0.94){
-        floorIdx = Math.max(0, scaleIdx-1);
+        floorIdx = Math.max(qualityBounds.best, scaleIdx-1);
         scaleIdx = floorIdx; renderScale = SCALE_STEPS[scaleIdx]; allocTargets();
       }
       pending = 0; hold = 3.0; return;
     }
-    if (med > 20.5 && scaleIdx < floorIdx){
+    if (med > (MOBILE ? 37 : 20.5) && scaleIdx < floorIdx){
       pending = med;
       scaleIdx++; renderScale = SCALE_STEPS[scaleIdx]; allocTargets(); hold = 2.5;
-    } else if (med < 11.5 && scaleIdx > 0){
+    } else if (med < (MOBILE ? 26 : 11.5) && scaleIdx > qualityBounds.best){
       scaleIdx--; renderScale = SCALE_STEPS[scaleIdx]; allocTargets(); hold = 4.0;
     } else hold = 1.0;
   };
@@ -975,7 +1025,7 @@ const blurMat = postMat(`
 const compMat = postMat(`
   uniform sampler2D tScene, tBloom;
   uniform vec2  res;
-  uniform float time, bloom, vig, dmg, low, ab, flash, scope;
+  uniform float time, bloom, vig, dmg, low, ab, flash, scope, filmGrain;
   varying vec2 vUv;
   vec3 aces(vec3 x){
     const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14;
@@ -1037,12 +1087,12 @@ const compMat = postMat(`
     float vg = 1.0 - smoothstep(0.09, 0.52, r2*1.5);
     col *= mix(1.0, 0.40 + 0.60*vg, vig * (1.0 - scope));
 
-    col += (hash(uv*res + fract(time)*vec2(37.0,17.0)) - 0.5) * 0.030;
+    col += (hash(uv*res + fract(time)*vec2(37.0,17.0)) - 0.5) * filmGrain;
     gl_FragColor = vec4(pow(max(col,0.0), vec3(0.4545)), 1.0);
   }`, {
     tScene:{value:null}, tBloom:{value:null}, res:{value:new THREE.Vector2()},
     time:{value:0}, bloom:{value:0.60}, vig:{value:1.0}, dmg:{value:0}, low:{value:0},
-    ab:{value:0.5}, flash:{value:0}, scope:{value:0}
+    ab:{value:0.5}, flash:{value:0}, scope:{value:0}, filmGrain:{value:MOBILE ? 0.008 : 0.030}
   });
 
 /* =========================================================================
@@ -6560,7 +6610,7 @@ function frame(now){
   compMat.uniforms.dmg.value  = G.dmgFlash;
   compMat.uniforms.low.value  = pulse*0.55;
   compMat.uniforms.flash.value= G.killFlash*0.045;
-  compMat.uniforms.ab.value   = 0.18;
+  compMat.uniforms.ab.value   = MOBILE ? 0.06 : 0.18;
 
   /* ---------------- render ---------------- */
   renderer.setRenderTarget(sceneRT);
@@ -6614,6 +6664,7 @@ function syncTouch(){
 }
 if (MOBILE) {
   document.body.classList.add('touch');
+  document.querySelector('#startScreen .title').innerHTML = '重围突袭<small>BREACHLINE — SECTOR 7</small>';
   const cta = document.querySelector('#startScreen .cta');
   if (cta) cta.textContent = '点按开始';
   const hint = document.querySelector('#startScreen .hint');
@@ -6642,6 +6693,9 @@ window.ironhold = {
   weapon(i){ if (G.running) switchWeapon(i); },
   weaponIndex(){ return player.weapon; },
   aiming(){ return !!player.ads; },
+  fireModeLabel(){ const w = WEAPONS[player.weapon]; return w.auto && !w.semi ? '连发' : '单发'; },
+  started(){ return G.started && !G.over; },
+  setQuality(name){ setMobileQuality(name); },
   fireMode(){
     if (!G.running) return;
     const w = WEAPONS[player.weapon];
@@ -6650,12 +6704,13 @@ window.ironhold = {
   pause(){ pauseGame(); },
   resume(){ resumeGame(); },
   onBack(){
+    if (window.ironholdTouch && window.ironholdTouch.handleBack()) return 'settings';
     if (!G.started || G.over || G.paused || !G.running) return 'exit';
     pauseGame();
     return 'paused';
   }
 };
 </script>
-<script src="touch.js"></script>
+<script src="mobile-controls.js"></script>
 </body>
 </html>
